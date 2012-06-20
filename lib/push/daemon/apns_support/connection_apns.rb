@@ -2,7 +2,7 @@ module Push
   module Daemon
     module ApnsSupport
       class ConnectionApns
-        attr_reader :name, :provider
+        attr_reader :name, :provider, :last_write
 
         def initialize(provider, i=nil)
           @provider = provider
@@ -16,6 +16,11 @@ module Push
             @host = "feedback.#{provider.configuration[:sandbox] ? 'sandbox.' : ''}push.apple.com"
             @port = 2196
           end
+          written
+        end
+
+        def self.idle_period
+          30.minutes
         end
 
         def connect
@@ -40,6 +45,8 @@ module Push
         end
 
         def write(data)
+          reconnect_idle if idle_period_exceeded?
+
           retry_count = 0
 
           begin
@@ -68,9 +75,23 @@ module Push
 
         protected
 
+        def reconnect_idle
+          Push::Daemon.logger.info("[#{@name}] Idle period exceeded, reconnecting...")
+          reconnect
+        end
+
+        def idle_period_exceeded?
+           Time.now - last_write > self.class.idle_period
+        end
+
         def write_data(data)
           @ssl_socket.write(data)
           @ssl_socket.flush
+          written
+        end
+
+        def written
+          self.last_write = Time.now
         end
 
         def setup_ssl_context
