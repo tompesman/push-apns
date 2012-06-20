@@ -1,6 +1,6 @@
 module Push
   class MessageApns < Push::Message
-    SELECT_TIMEOUT = 0.5
+    SELECT_TIMEOUT = 0.2
     ERROR_TUPLE_BYTES = 6
     APN_ERRORS = {
       1 => "Processing error",
