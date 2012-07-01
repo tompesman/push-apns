@@ -41,7 +41,7 @@ module Push
     end
 
     def alert
-      string_or_json = read_attribute(:alert)
+      string_or_json = properties[:alert]
       MultiJson.decode(string_or_json) rescue string_or_json
     end
 
