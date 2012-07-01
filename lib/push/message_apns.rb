@@ -21,14 +21,14 @@ module Push
     validates :device, :format => { :with => /\A[a-z0-9]{64}\z/ }
     validates_with Push::Apns::BinaryNotificationValidator
 
-    # def attributes_for_device=(attrs)
-    #   raise ArgumentError, "attributes_for_device must be a Hash" if !attrs.is_a?(Hash)
-    #   write_attribute(:attributes_for_device, MultiJson.encode(attrs))
-    # end
-    #
-    # def attributes_for_device
-    #   MultiJson.decode(read_attribute(:attributes_for_device)) if read_attribute(:attributes_for_device)
-    # end
+    def attributes_for_device=(attrs)
+      raise ArgumentError, "attributes_for_device must be a Hash" if !attrs.is_a?(Hash)
+      properties[:attributes_for_device] = MultiJson.encode(attrs)
+    end
+
+    def attributes_for_device
+      MultiJson.decode(properties[:attributes_for_device]) if properties[:attributes_for_device]
+    end
 
     def alert=(alert)
       if alert.is_a?(Hash)
