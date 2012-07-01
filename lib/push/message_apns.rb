@@ -32,10 +32,8 @@ module Push
 
     def alert=(alert)
       if alert.is_a?(Hash)
-        #write_attribute(:alert, MultiJson.encode(alert))
         properties[:alert] = MultiJson.encode(alert)
       else
-        #write_attribute(:alert, alert)
         properties[:alert] = alert
       end
     end
