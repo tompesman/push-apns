@@ -2,7 +2,8 @@ module Push
   module Daemon
     module ApnsSupport
       class ConnectionApns
-        attr_reader :name, :provider, :last_write
+        attr_reader :name, :provider
+        attr_accessor :last_write
 
         def initialize(provider, i=nil)
           @provider = provider
