@@ -4,6 +4,7 @@ module Push
       class ConnectionApns
         attr_reader :name, :provider
         attr_accessor :last_write
+        IDLE_PERIOD = 30.minutes
 
         def initialize(provider, i=nil)
           @provider = provider
@@ -18,10 +19,6 @@ module Push
             @port = 2196
           end
           written
-        end
-
-        def self.idle_period
-          30.minutes
         end
 
         def connect
@@ -82,7 +79,7 @@ module Push
         end
 
         def idle_period_exceeded?
-           Time.now - last_write > self.class.idle_period
+           Time.now - last_write > IDLE_PERIOD
         end
 
         def write_data(data)
