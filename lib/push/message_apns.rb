@@ -24,16 +24,16 @@ module Push
 
     def attributes_for_device=(attrs)
       raise ArgumentError, "attributes_for_device must be a Hash" if !attrs.is_a?(Hash)
-      properties[:attributes_for_device] = MultiJson.encode(attrs)
+      properties[:attributes_for_device] = MultiJson.dump(attrs)
     end
 
     def attributes_for_device
-      MultiJson.decode(properties[:attributes_for_device]) if properties[:attributes_for_device]
+      MultiJson.load(properties[:attributes_for_device]) if properties[:attributes_for_device]
     end
 
     def alert=(alert)
       if alert.is_a?(Hash)
-        properties[:alert] = MultiJson.encode(alert)
+        properties[:alert] = MultiJson.dump(alert)
       else
         properties[:alert] = alert
       end
@@ -41,7 +41,7 @@ module Push
 
     def alert
       string_or_json = properties[:alert]
-      MultiJson.decode(string_or_json) rescue string_or_json
+      MultiJson.load(string_or_json) rescue string_or_json
     end
 
     # This method conforms to the enhanced binary format.
@@ -56,7 +56,7 @@ module Push
     end
 
     def payload
-      MultiJson.encode(as_json)
+      MultiJson.dump(as_json)
     end
 
     def payload_size
