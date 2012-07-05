@@ -10,8 +10,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Tom Pesman"]
   s.email       = ["tom@tnux.net"]
   s.homepage    = "https://github.com/tompesman/push-apns"
-  s.summary     = "APNS (iOS) part of the modular push daemon."
-  s.description = "Plugin with APNS specific push information."
+  s.summary     = "APNS (iOS/Apple) part of the modular push daemon."
+  s.description = "APNS support for the modular push daemon."
 
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.files         = `git ls-files lib`.split("\n") + ["README.md", "MIT-LICENSE"]
