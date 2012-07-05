@@ -50,7 +50,7 @@ module Push
         def self.create_feedback(failed_at, device)
           formatted_failed_at = failed_at.strftime("%Y-%m-%d %H:%M:%S UTC")
           Push::Daemon.logger.info("[FeedbackReceiver] Delivery failed at #{formatted_failed_at} for #{device}")
-          Push::FeedbackApns.create!(:failed_at => failed_at, :device => device)
+          Push::FeedbackApns.create!(:failed_at => failed_at, :device => device, :follow_up => 'delete')
         end
       end
     end
