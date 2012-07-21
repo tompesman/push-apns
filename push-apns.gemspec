@@ -19,6 +19,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency "multi_json", "~> 1.0"
-  s.add_dependency "push-core", "0.0.1.pre2"
+  s.add_dependency "push-core", "0.0.1.pre4"
   s.add_development_dependency "sqlite3"
 end
