@@ -1,14 +1,12 @@
 module Push
   module Daemon
     class Apns
-      attr_accessor :configuration, :certificate
+      attr_accessor :configuration
 
       def initialize(options)
         self.configuration = options
 
-        self.certificate = ApnsSupport::Certificate.new(configuration[:certificate])
-        certificate.load
-
+        @feedback_receiver = ApnsSupport::FeedbackReceiver.new(self)
         start_feedback
       end
 
@@ -26,11 +24,11 @@ module Push
       end
 
       def start_feedback
-        ApnsSupport::FeedbackReceiver.start(self)
+        @feedback_receiver.start
       end
 
       def stop_feedback
-        ApnsSupport::FeedbackReceiver.stop
+        @feedback_receiver.stop
       end
 
       def stop

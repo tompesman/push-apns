@@ -10,11 +10,11 @@ module Push
           @provider = provider
           if i
             # Apns push connection
-            @name = "ConnectionApns #{i}"
+            @name = "#{@provider.configuration[:name]}: ConnectionApns #{i}"
             @host = "gateway.#{provider.configuration[:sandbox] ? 'sandbox.' : ''}push.apple.com"
             @port = 2195
           else
-            @name = "FeedbackReceiver"
+            @name = "#{@provider.configuration[:name]}: FeedbackReceiver"
             @host = "feedback.#{provider.configuration[:sandbox] ? 'sandbox.' : ''}push.apple.com"
             @port = 2196
           end
@@ -94,8 +94,8 @@ module Push
 
         def setup_ssl_context
           ssl_context = OpenSSL::SSL::SSLContext.new
-          ssl_context.key = OpenSSL::PKey::RSA.new(provider.certificate.certificate, provider.configuration[:certificate_password])
-          ssl_context.cert = OpenSSL::X509::Certificate.new(provider.certificate.certificate)
+          ssl_context.key = OpenSSL::PKey::RSA.new(provider.configuration[:certificate], provider.configuration[:certificate_password])
+          ssl_context.cert = OpenSSL::X509::Certificate.new(provider.configuration[:certificate])
           ssl_context
         end
 

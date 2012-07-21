@@ -15,7 +15,7 @@ module Push
     }
 
     store :properties, accessors: [:alert, :badge, :sound, :expiry, :attributes_for_device]
-    attr_accessible :device, :alert, :badge, :sound, :expiry, :attributes_for_device
+    attr_accessible :app, :device, :alert, :badge, :sound, :expiry, :attributes_for_device
 
     validates :badge, :numericality => true, :allow_nil => true
     validates :expiry, :numericality => true, :presence => true
