@@ -1,3 +1,3 @@
 module PushApns
-  VERSION = "0.0.1.pre4"
+  VERSION = "1.0.0"
 end
