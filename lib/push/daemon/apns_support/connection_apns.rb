@@ -1,6 +1,8 @@
 module Push
   module Daemon
     module ApnsSupport
+      class ConnectionError < StandardError; end
+
       class ConnectionApns
         attr_reader :name, :provider
         attr_accessor :last_write
