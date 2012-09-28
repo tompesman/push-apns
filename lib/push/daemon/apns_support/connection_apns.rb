@@ -51,7 +51,7 @@ module Push
 
           begin
             write_data(data)
-          rescue Errno::EPIPE, Errno::ETIMEDOUT, OpenSSL::SSL::SSLError => e
+          rescue Errno::EPIPE, Errno::ETIMEDOUT, Errno::ECONNRESET, OpenSSL::SSL::SSLError => e
             retry_count += 1;
 
             if retry_count == 1
