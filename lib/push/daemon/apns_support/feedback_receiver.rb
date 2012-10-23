@@ -34,7 +34,7 @@ module Push
 
             while tuple = connection.read(FEEDBACK_TUPLE_BYTES)
               timestamp, device = parse_tuple(tuple)
-              create_feedback(timestamp, device)
+              create_feedback(connection, timestamp, device)
             end
           rescue StandardError => e
             Push::Daemon.logger.error(e)
@@ -50,9 +50,9 @@ module Push
           [Time.at(failed_at).utc, device]
         end
 
-        def create_feedback(failed_at, device)
+        def create_feedback(connection, failed_at, device)
           formatted_failed_at = failed_at.strftime("%Y-%m-%d %H:%M:%S UTC")
-          Push::Daemon.logger.info("[FeedbackReceiver] Delivery failed at #{formatted_failed_at} for #{device}")
+          Push::Daemon.logger.info("[#{connection.name}: Delivery failed at #{formatted_failed_at} for #{device}")
           with_database_reconnect_and_retry(connection.name) do
             Push::FeedbackApns.create!(:app => @provider.configuration[:name], :failed_at => failed_at, :device => device, :follow_up => 'delete')
           end
