@@ -76,6 +76,9 @@ module Push
     end
 
     def check_for_error(connection)
+      # check for true, because check_for_error can be nil
+      return if connection.provider.configuration[:skip_check_for_error] == true
+
       if connection.select(SELECT_TIMEOUT)
         error = nil
 
