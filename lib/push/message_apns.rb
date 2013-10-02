@@ -92,7 +92,7 @@ module Push
         end
 
         begin
-          Push::Daemon.logger.error("[#{connection.name}] Error received, reconnecting...")
+          Push.logger.error("[#{connection.name}] Error received, reconnecting...")
           connection.reconnect
         ensure
           raise error if error

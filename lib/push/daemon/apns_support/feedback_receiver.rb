@@ -2,13 +2,13 @@ module Push
   module Daemon
     module ApnsSupport
       class FeedbackReceiver
-        include Push::Daemon::InterruptibleSleep
         include Push::Daemon::DatabaseReconnectable
 
         FEEDBACK_TUPLE_BYTES = 38
 
         def initialize(provider)
           @provider = provider
+          @interruptible_sleeper = InterruptibleSleep.new(@provider.configuration[:feedback_poll])
         end
 
         def start
@@ -16,14 +16,14 @@ module Push
             loop do
               break if @stop
               check_for_feedback
-              interruptible_sleep @provider.configuration[:feedback_poll]
+              @interruptible_sleeper.sleep
             end
           end
         end
 
         def stop
           @stop = true
-          interrupt_sleep
+          @interrupt_sleeper.interrupt_sleep if @interrupt_sleeper
         end
 
         def check_for_feedback
@@ -37,7 +37,7 @@ module Push
               create_feedback(connection, timestamp, device)
             end
           rescue StandardError => e
-            Push::Daemon.logger.error(e)
+            Push.logger.error(e)
           ensure
             connection.close if connection
           end
@@ -52,7 +52,7 @@ module Push
 
         def create_feedback(connection, failed_at, device)
           formatted_failed_at = failed_at.strftime("%Y-%m-%d %H:%M:%S UTC")
-          Push::Daemon.logger.info("[#{connection.name}: Delivery failed at #{formatted_failed_at} for #{device}")
+          Push.logger.info("[#{connection.name}: Delivery failed at #{formatted_failed_at} for #{device}")
           with_database_reconnect_and_retry(connection.name) do
             Push::FeedbackApns.create!(:app => @provider.configuration[:name], :failed_at => failed_at, :device => device, :follow_up => 'delete')
           end

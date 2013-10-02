@@ -55,7 +55,7 @@ module Push
             retry_count += 1;
 
             if retry_count == 1
-              Push::Daemon.logger.error("[#{@name}] Lost connection to #{@host}:#{@port} (#{e.class.name}), reconnecting...")
+              Push.logger.error("[#{@name}] Lost connection to #{@host}:#{@port} (#{e.class.name}), reconnecting...")
             end
 
             if retry_count <= 3
@@ -76,7 +76,7 @@ module Push
         protected
 
         def reconnect_idle
-          Push::Daemon.logger.info("[#{@name}] Idle period exceeded, reconnecting...")
+          Push.logger.info("[#{@name}] Idle period exceeded, reconnecting...")
           reconnect
         end
 
@@ -108,7 +108,7 @@ module Push
           ssl_socket = OpenSSL::SSL::SSLSocket.new(tcp_socket, @ssl_context)
           ssl_socket.sync = true
           ssl_socket.connect
-          Push::Daemon.logger.info("[#{@name}] Connected to #{@host}:#{@port}")
+          Push.logger.info("[#{@name}] Connected to #{@host}:#{@port}")
           [tcp_socket, ssl_socket]
         end
       end
