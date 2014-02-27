@@ -13,9 +13,8 @@ module Push
       8 => "Invalid token",
       255 => "None (unknown error)"
     }
-
-    store :properties, accessors: [:alert, :badge, :sound, :expiry, :attributes_for_device]
-    attr_accessible :app, :device, :alert, :badge, :sound, :expiry, :attributes_for_device if defined?(ActiveModel::MassAssignmentSecurity)
+    store :properties, accessors: [:alert, :badge, :sound, :expiry, :attributes_for_device, :content_available]
+    attr_accessible :app, :device, :alert, :badge, :sound, :expiry, :attributes_for_device, :content_available if defined?(ActiveModel::MassAssignmentSecurity)
 
     validates :badge, :numericality => true, :allow_nil => true
     validates :expiry, :numericality => true, :presence => true
@@ -71,6 +70,7 @@ module Push
       json['aps']['alert'] = alert if alert
       json['aps']['badge'] = badge if badge
       json['aps']['sound'] = sound if sound
+      json['aps']['content-available'] = content_available if content_available
       attributes_for_device.each { |k, v| json[k.to_s] = v.to_s } if attributes_for_device
       json
     end
