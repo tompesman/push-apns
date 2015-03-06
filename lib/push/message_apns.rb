@@ -61,18 +61,16 @@ module Push
     # https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/CommunicatingWIthAPS.html#//apple_ref/doc/uid/TP40008194-CH101-SW4
     def to_message(options = {})
       id_for_pack = options[:for_validation] ? 0 : id
-      frame_length = 3 + 32 + # device item
-                     3 + payload_size + # payload item
-                     3 + 4 + # notification identifier item
-                     3 + 4 + # expiry item
-                     3 + 1 # priority item
+      # frame_length = 35 + # device item id (1 byte) + item size (2 bytes) + device number (32 bytes)
+      #                3 + payload_size + # payload item id (1 byte) + item size (2 bytes) + payload size
+      #                7 + # notification identifier item id (1 byte) + item size (2 bytes) + notification identifier (4 bytes)
+      #                7 + # expiration item id (1 byte) + item size (2 bytes) + expiry (4 bytes)
+      #                3 + 1 # priority item id (1 byte) + item size (2 bytes) + priority (1 byte)
+      frame_length = 56 + payload_size
                      
       # old message
       # [1, id_for_pack, expiry, 0, 32, device, payload_size, payload].pack("cNNccH*na*")
-      [2, frame_length, 1, 32, device, 2, payload_size, payload, 3, 4, id_for_pack, 4, 4, expiry, 5, 1, priority].pack("cNcnH*cna*cnNcnNcnc").tap do |t|
-        h = t.each_byte.collect{|b| b.to_s(16)}.join
-        ::Rails.logger.debug "APNS packed message : #{h}"
-      end
+      [2, frame_length, 1, 32, device, 2, payload_size, payload, 3, 4, id_for_pack, 4, 4, expiry, 5, 1, priority].pack("cNcnH*cna*cnNcnNcnc")
     end
 
     def use_connection
