@@ -11,13 +11,15 @@ module Push
       6 => "Missing topic size",
       7 => "Missing payload size",
       8 => "Invalid token",
+      10 => "Shutdown",
       255 => "None (unknown error)"
     }
-    store :properties, accessors: [:alert, :badge, :sound, :expiry, :attributes_for_device, :content_available]
-    attr_accessible :app, :device, :alert, :badge, :sound, :expiry, :attributes_for_device, :content_available if defined?(ActiveModel::MassAssignmentSecurity)
+    store :properties, accessors: [:alert, :badge, :sound, :expiry, :attributes_for_device, :content_available, :priority]
+    attr_accessible :app, :device, :alert, :badge, :sound, :expiry, :attributes_for_device, :content_available, :priority if defined?(ActiveModel::MassAssignmentSecurity)
 
     validates :badge, :numericality => true, :allow_nil => true
     validates :expiry, :numericality => true, :presence => true
+    validates :priority, :numericality => true, :allow_nil => true
     validates :device, :format => { :with => /\A[a-z0-9]{64}\z/ }
     validates_with Push::Apns::BinaryNotificationValidator
 
@@ -43,11 +45,32 @@ module Push
       MultiJson.load(string_or_json) rescue string_or_json
     end
 
-    # This method conforms to the enhanced binary format.
-    # http://developer.apple.com/library/ios/#documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingWIthAPS/CommunicatingWIthAPS.html#//apple_ref/doc/uid/TP40008194-CH101-SW4
+    def priority
+      if ( properties[:alert].nil? && 
+         properties[:badge].nil? && 
+         properties[:sound].nil? && 
+         properties[:expiry].nil? && 
+         properties[:content_available].present? )
+         5
+       else
+         properties[:priority].present? ? properties[:priority] : 10
+      end
+    end
+    
+    # This method conforms to the new binary interface and notification format.
+    # https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/CommunicatingWIthAPS.html#//apple_ref/doc/uid/TP40008194-CH101-SW4
     def to_message(options = {})
       id_for_pack = options[:for_validation] ? 0 : id
-      [1, id_for_pack, expiry, 0, 32, device, payload_size, payload].pack("cNNccH*na*")
+      # frame_length = 35 + # device item id (1 byte) + item size (2 bytes) + device number (32 bytes)
+      #                3 + payload_size + # payload item id (1 byte) + item size (2 bytes) + payload size
+      #                7 + # notification identifier item id (1 byte) + item size (2 bytes) + notification identifier (4 bytes)
+      #                7 + # expiration item id (1 byte) + item size (2 bytes) + expiry (4 bytes)
+      #                3 + 1 # priority item id (1 byte) + item size (2 bytes) + priority (1 byte)
+      frame_length = 56 + payload_size
+                     
+      # old message
+      # [1, id_for_pack, expiry, 0, 32, device, payload_size, payload].pack("cNNccH*na*")
+      [2, frame_length, 1, 32, device, 2, payload_size, payload, 3, 4, id_for_pack, 4, 4, expiry, 5, 1, priority].pack("cNcnH*cna*cnNcnNcnc")
     end
 
     def use_connection
