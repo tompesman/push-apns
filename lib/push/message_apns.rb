@@ -11,6 +11,7 @@ module Push
       6 => "Missing topic size",
       7 => "Missing payload size",
       8 => "Invalid token",
+      10 => "Shutdown",
       255 => "None (unknown error)"
     }
     store :properties, accessors: [:alert, :badge, :sound, :expiry, :attributes_for_device, :content_available, :priority]
