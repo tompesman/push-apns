@@ -2,27 +2,31 @@ module Push
   class MessageApns < Push::Message
     SELECT_TIMEOUT = 0.2
     ERROR_TUPLE_BYTES = 6
+    APNS_PRIORITY_IMMEDIATE = 10
+    APNS_PRIORITY_CONSERVE_POWER = 5
     APN_ERRORS = {
-      1 => "Processing error",
-      2 => "Missing device token",
-      3 => "Missing topic",
-      4 => "Missing payload",
-      5 => "Missing token size",
-      6 => "Missing topic size",
-      7 => "Missing payload size",
-      8 => "Invalid token",
-      255 => "None (unknown error)"
-    }
-    store :properties, accessors: [:alert, :badge, :sound, :expiry, :attributes_for_device, :content_available]
-    attr_accessible :app, :device, :alert, :badge, :sound, :expiry, :attributes_for_device, :content_available if defined?(ActiveModel::MassAssignmentSecurity)
+      1 =>   "Processing error".freeze,
+      2 =>   "Missing device token".freeze,
+      3 =>   "Missing topic".freeze,
+      4 =>   "Missing payload".freeze,
+      5 =>   "Missing token size".freeze,
+      6 =>   "Missing topic size".freeze,
+      7 =>   "Missing payload size".freeze,
+      8 =>   "Invalid token".freeze,
+      10 =>  "Shutdown".freeze,
+      255 => "None (unknown error)".freeze
+    }.freeze
+    store :properties, accessors: [:alert, :badge, :sound, :expiry, :attributes_for_device, :content_available, :priority]
+    attr_accessible :app, :device, :alert, :badge, :sound, :expiry, :attributes_for_device, :content_available, :priority if defined?(ActiveModel::MassAssignmentSecurity)
 
     validates :badge, :numericality => true, :allow_nil => true
     validates :expiry, :numericality => true, :presence => true
+    validates :priority, :numericality => true, :allow_nil => true
     validates :device, :format => { :with => /\A[a-z0-9]{64}\z/ }
     validates_with Push::Apns::BinaryNotificationValidator
 
     def attributes_for_device=(attrs)
-      raise ArgumentError, "attributes_for_device must be a Hash" if !attrs.is_a?(Hash)
+      raise ArgumentError, "attributes_for_device must be a Hash" unless attrs.is_a?(Hash)
       properties[:attributes_for_device] = MultiJson.dump(attrs)
     end
 
@@ -43,11 +47,14 @@ module Push
       MultiJson.load(string_or_json) rescue string_or_json
     end
 
-    # This method conforms to the enhanced binary format.
-    # http://developer.apple.com/library/ios/#documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingWIthAPS/CommunicatingWIthAPS.html#//apple_ref/doc/uid/TP40008194-CH101-SW4
     def to_message(options = {})
-      id_for_pack = options[:for_validation] ? 0 : id
-      [1, id_for_pack, expiry, 0, 32, device, payload_size, payload].pack("cNNccH*na*")
+      frame = ""
+      frame << device_token_item
+      frame << payload_item
+      frame << identifier_item(options)
+      frame << expiration_item
+      frame << priority_item
+      [2, frame.bytesize].pack("cN") + frame
     end
 
     def use_connection
@@ -62,7 +69,40 @@ module Push
       payload.bytesize
     end
 
+    def priority
+      if properties[:alert].nil? &&
+         properties[:badge].nil? &&
+         properties[:sound].nil? &&
+         properties[:content_available].present?
+        APNS_PRIORITY_CONSERVE_POWER
+      else
+        properties[:priority].present? ? properties[:priority] : APNS_PRIORITY_IMMEDIATE
+      end
+    end
+
     private
+
+    def device_token_item
+      [1, 32, device].pack("cnH*")
+    end
+
+    def payload_item
+      json = payload
+      [2, json.bytesize, json].pack("cna*")
+    end
+
+    def identifier_item(options)
+      frame_id = options[:for_validation] ? 0 : id
+      [3, 4, frame_id].pack("cnN")
+    end
+
+    def expiration_item
+      [4, 4, expiry.to_i].pack("cnN")
+    end
+
+    def priority_item
+      [5, 1, priority].pack("cnc")
+    end
 
     def as_json
       json = ActiveSupport::OrderedHash.new
